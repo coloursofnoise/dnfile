@@ -117,9 +117,13 @@ class UserString(object):
 
 
 class UserStringHeap(BinaryHeap):
-    def get(self, index) -> Optional[bytes]:
-        data = super(UserStringHeap, self).get(index)
-        if data is None:
+    def get_with_size(self, index) -> Optional[Tuple[bytes, int]]:
+        ret = super(UserStringHeap, self).get_with_size(index)
+        if ret is None:
+            return None
+
+        data, length = ret
+        if not data:
             return None
 
         flag: int = 0
@@ -151,11 +155,13 @@ class UserStringHeap(BinaryHeap):
                 pass
             else:
                 logger.warning("unexpected string flag value: 0x%02x", flag)
+            # While the trailing flag is trimmed from `data`, `length` still
+            # represents the size of the raw data.
             data = data[:-1]
         else:
             logger.warning("string missing trailing flag")
 
-        return data
+        return data, length
 
     def get_us(self, index, encoding="utf-16") -> Optional[UserString]:
         """
